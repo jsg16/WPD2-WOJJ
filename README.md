@@ -123,6 +123,6 @@ Criterion: Mean Absolute Percentage Error (MAPE)
 
 ![](./figures/Hemyock_Prediction.png)
 
-![](./figures/Stratton_Prediction.png)
+![](./figures/Portishead_Ashlands_Prediction.png)
 
 *\*Using the averaged smoothing method with window size equal to 13 for post-processing.*
