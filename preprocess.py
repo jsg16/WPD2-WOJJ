@@ -11,7 +11,16 @@ import pandas as pd
 from statsmodels.tsa.holtwinters import SimpleExpSmoothing
 
 ALPHAS = {"temperature": 5e-2, "solar_irradiance": 5e-1, "windspeed_north": 5e-1, "windspeed_east": 5e-1}
-OUTLIER_REMOVAL = {"BOURNVILLE CB 7"}
+OUTLIER_REMOVAL = {"BOURNVILLE CB 7", "BRIDPORT CB 306", "PORTISHEAD ASHLANDS CB 4"}
+
+NEARBY_STATIONS = {
+    "BOURNVILLE CB 7": ["BRADLEY STOKE CB 8"], 
+    "BRADLEY STOKE CB 8": ["BOURNVILLE CB 7"], 
+    "STRATTON CB 4041": [],
+    "BRIDPORT CB 306": ["HEMYOCK CB 56_24"], 
+    "HEMYOCK CB 56_24": ["BRIDPORT CB 306"], 
+    "PORTISHEAD ASHLANDS CB 4": ["BOURNVILLE CB 7", "BRADLEY STOKE CB 8"]
+}
 
 def avgeraged_smoothing(c, ws=7):
     weights = np.ones(ws) / ws
@@ -48,15 +57,13 @@ def load_smoothing(data_by_station, ws=7):
     for station, data in data_by_station.items():
         data["Training Data"] =  avgeraged_smoothing(data["Training Data"], ws=ws).value
 
-NEARBY_STATIONS = {
-    "BOURNVILLE CB 7": ["BRADLEY STOKE CB 8"], 
-    "BRADLEY STOKE CB 8": ["BOURNVILLE CB 7"], 
-    "STRATTON CB 4041": []
-}
-
-def pack_dataset(data_by_station, national_demand, input_smoothed=False):
-    dataset_by_station = {station: {"train": None, "test": None} for station in data_by_station}
-    for station, data in data_by_station.items():
+def pack_dataset(data_by_station, national_demand, stations, input_smoothed=False):
+    dataset_by_station = {station: {"train": None, "test": None} for station in stations}
+    for station in stations:
+        if station not in data_by_station:
+            print("Invalid station name:", stations)
+            continue
+        data = data_by_station[station]
         v = data["Training Data"]
         # train & test
         dfs = [pd.DataFrame(np.transpose([v.values[:-5376], v.values[5376:]]), index=v.index[5376:], columns=['prev_2_mo', 'target']),

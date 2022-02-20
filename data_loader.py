@@ -7,13 +7,13 @@ Provide functions of loading data
 """
 
 """
-    The following file structure is expected in the DATA_FOLDER:
-    - DATA_FOLDER:
+    The following file structure is expected in the data_folder:
+    - data_folder:
         - phase-1
             - {STATION} Combined Load xxxxx.csv
             - {STATION} Training Data.csv
             - template_1.csv
-            - solution_phase1.csv (If XXX)
+            - solution_phase1.csv (If show errors)
         - phase-2
             - {STATION} Combined Load xxxxx.csv
             - {STATION} Training Data.csv
@@ -27,49 +27,48 @@ Provide functions of loading data
 import os
 import pandas as pd
 
-STATIONS = {"phase-1": ["BOURNVILLE CB 7", "BRADLEY STOKE CB 8", "STRATTON CB 4041"],
-            "phase-2": []}
+STATIONS = ["BOURNVILLE CB 7", "BRADLEY STOKE CB 8", "STRATTON CB 4041", "BRIDPORT CB 306", "HEMYOCK CB 56_24", "PORTISHEAD ASHLANDS CB 4"]
 
-WEATHERS = {"BOURNVILLE CB 7": 7, "BRADLEY STOKE CB 8": 8, "STRATTON CB 4041": 3}
+WEATHERS = {"BOURNVILLE CB 7": 7, "BRADLEY STOKE CB 8": 8, "STRATTON CB 4041": 3,
+            "BRIDPORT CB 306": 6, "HEMYOCK CB 56_24": 5, "PORTISHEAD ASHLANDS CB 4": 8}
 
-def load_data(DATA_FOLDER, phase, stations=[]):
+def load_data(data_folder):
     data_by_station = {}
-
-    # default: all stations
-    if stations is None or len(stations) == 0:
-        stations = STATIONS["phase-%s" % phase]
+    combined_load_by_station = {}
 
     # map station name
-    for station in stations:
-        for s in STATIONS["phase-%s" % phase]:
-            if s.startswith(station.upper()):
-                data_by_station[s] = {"Weather Data": WEATHERS[s]}
-                break
+    for station in STATIONS:
+        data_by_station[station] = {"Weather Data": WEATHERS[station]}
+        combined_load_by_station[station] = {}
 
     # load data by station
-    load_folder = os.path.join(DATA_FOLDER, "phase-%s" % phase)
-    load_station_training_data(load_folder, data_by_station)
+    load_station_training_data(os.path.join(data_folder, "phase-%s" % 1), data_by_station)
+    load_station_training_data(os.path.join(data_folder, "phase-%s" % 2), data_by_station)
+    # combined load by station
+    load_station_combined_load(os.path.join(data_folder, "phase-%s" % 1), combined_load_by_station)
+    load_station_combined_load(os.path.join(data_folder, "phase-%s" % 2), combined_load_by_station)
 
     # weather data by station
-    weather_folder = os.path.join(DATA_FOLDER, "weather_data")
+    weather_folder = os.path.join(data_folder, "weather_data")
     load_weather(weather_folder, data_by_station)
 
     # national demand data
-    nd_folder = os.path.join(DATA_FOLDER, "national_demand")
+    nd_folder = os.path.join(data_folder, "national_demand")
     national_demand = load_national_demand(nd_folder)
 
-    return data_by_station, national_demand
+    return data_by_station, combined_load_by_station, national_demand
 
 def load_station_training_data(load_folder, data_by_station):
     for file in os.listdir(load_folder):
         if "Training Data" not in file:
             continue
-        for station in data_by_station:
-            if file.startswith(station.upper()):
-                if "Training Data" in file:
-                    data_by_station[station]["Training Data"] = os.path.join(load_folder, file)
+        for station, data in data_by_station.items():
+            if file.startswith(station.upper()) and "Training Data" not in data:
+                data_by_station[station]["Training Data"] = os.path.join(load_folder, file)
                 break
     for station, data in data_by_station.items():
+        if "Training Data" not in data or type(data["Training Data"]) is not str:
+            continue
         # Training Data
         training = pd.read_csv(data["Training Data"])
         training.drop('Unnamed: 0', axis=1, inplace=True)
@@ -81,6 +80,24 @@ def load_station_training_data(load_folder, data_by_station):
         else:
             print(training.where(training.units!=9, inplace=True))
         data_by_station[station]["Training Data"] = training
+
+def load_station_combined_load(load_folder, data_by_station):
+    for file in os.listdir(load_folder):
+        if "Combined Load" not in file:
+            continue
+        for station, data in data_by_station.items():
+            if file.startswith(station.upper()) and "Combined Load" not in data:
+                data_by_station[station]["Combined Load"] = os.path.join(load_folder, file)
+                break
+    for station, data in data_by_station.items():
+        if "Combined Load" not in data or type(data["Combined Load"]) is not str:
+            continue
+        # Combined Load
+        combined = pd.read_csv(data["Combined Load"])
+        # re-index
+        combined.index = pd.to_datetime(combined.time)
+        combined.drop('time', axis=1, inplace=True)
+        data_by_station[station]["Combined Load"] = combined
 
 def load_weather(weather_folder, data_by_station):
     for station, data in data_by_station.items():

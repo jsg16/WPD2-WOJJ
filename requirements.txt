@@ -1,6 +1,6 @@
 numpy
+pygam
 pandas
 matplotlib
-sklearn
-pygam
 statsmodels
+scikit-learn
