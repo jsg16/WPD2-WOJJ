@@ -2,7 +2,7 @@
 
 This repository contains the codes and visualization tools for Western Power Distribution Data Challenge (Part 2). The aim of the challenge is to predict the peak EV usages across eight weeks in three substations in UK by using the demand and weather data only. You can find more details on the task can be found [here](https://codalab.lisn.upsaclay.fr/competitions/1324). The data for this task can be found [here](https://connecteddata.westernpower.co.uk/dataset/western-power-distribution-data-challenge-2-estimating-ev-charger-demand). YouTube kick-off can be found [here](https://www.youtube.com/watch?v=KMCmlDhpN8o). Our team **WOJJ** members include **W**angkun Xu, **O**layinka Ayo, **J**emima Graham, and **J**iaruijue Wang. The work is supervised by Dr. Fei Teng. All the team members are from Control & Power group, Dept. EEE, Imperial College London, UK.
 
-# Overview
+# Workflow
 
 - Step 1: Load original data
 - Step 2: Pre-process data
@@ -13,12 +13,12 @@ This repository contains the codes and visualization tools for Western Power Dis
   - Load data of 56 days ago (smoothed)
   - Smoothed national data
   - Calendar features: month, hour, day of year and temporal-encoded day of week
-  - Weather features: temperature, solar_irradiance, windspeed_north and windspeed_east
+  - Weather features: ~~temperature~~, ~~solar_irradiance~~, windspeed_north and windspeed_east
   - Nearby-station load (smoothed)
 - Step 4: Train GAM
-  - Combination of TensorTerms of different features
+  - **Combination of TensorTerms of different features**
 - Step 5: Post-process
-  - Smoothed combined load (controlled by `COMB_SMOOTH_METHOD` and window size `WS`)
+  - **Smoothed combined load** (controlled by `COMB_SMOOTH_METHOD` and window size `WS`)
     - daily max
     - hourly mean
     - hourly max
@@ -80,6 +80,19 @@ The following file structure is expected in the data_folder:
 
 We incorporate the following parameters for GAM:
 
-* Number of splines `N_SPLINES`
+* `N_SPLINES`: Number of splines to use for each marginal term. Must be of same length as feature.
 
-* Coefficient of regularizer of GAM `LAMBDA`
+* `LAMBDA`: Strength of smoothing penalty. Must be a positive float. Larger values enforce stronger smoothing.
+
+## Error Matrix of stations of phase 1
+
+With `SHOW_ERROR` set to True, various smoothing methods with different window size will be evaluated, which can guide the parameter selection in phase 2. Our best results (error matrix) over stations of phase 1 are summarized as followed, which is a `pandas.DataFrame` object.
+
+|                    | daily_max | hourly_mean | hourly_max | avg-9 | **avg-13** | avg-17 | wgt-9 | wgt-13 | wgt-17 |
+|--------------------|-----------|-------------|------------|-------------------------|--------------------------|--------------------------|-------------------------|--------------------------|--------------------------|
+| BOURNVILLE CB 7    | 0.04363   | 0.04433     | 0.06339    | 0.04053                 | **0.03930**                  | 0.04052                  | 0.04081                 | 0.03996                  | 0.03945                  |
+| BRADLEY STOKE CB 8 | 0.01887   | 0.01939     | 0.02598    | 0.01884                 | 0.01808                  | **0.01570**                  | 0.01853                 | 0.01878                  | 0.01793                  |
+| STRATTON CB 4041   | 0.02663   | 0.03460     | 0.07314    | 0.02566                 | **0.02220**                  | 0.02744                  | 0.02465                 | 0.02517                  | 0.02341                  |
+| Overall (mean)     | 0.02971   | 0.03277     | 0.05417    | 0.02834                 | **0.02653**                  | 0.02788                  | 0.02800                 | 0.02797                  | 0.02693                  |
+
+*The avg and wgt stands for averaged and weighted smoothing respectively, while the followed number stands for the window size.*

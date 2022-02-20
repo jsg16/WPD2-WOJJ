@@ -8,7 +8,7 @@ import pandas as pd
 from pygam import GAM, te
 from sklearn.metrics import mean_absolute_percentage_error
 
-Fixed_te_default = [['month', 'hour', 'prev_2_mo'],
+Fixed_te_default = [['prev_2_mo', 'month', 'hour'],
                     ['month', 'hour', 'day'],
                     ['month', 'windspeed_north', 'windspeed_east']]
 
@@ -25,7 +25,7 @@ def initialise_gam(df, gam_params={"lambda": 0.1}, te_params={"n_splines": 10}, 
         tensor_terms += te(*[col_index[f] for f in features_comb], **te_params)
     # col starts from num_fixed_col stands for nearby stations
     for col in df.columns[num_fixed_col:]:
-        te_flex = [features_comb + [col] for features_comb in Nearby_te_default]
+        te_flex = [[col] + features_comb for features_comb in Nearby_te_default]
         for features_comb in te_flex:
             tensor_terms += te(*[col_index[f] for f in features_comb], **te_params)
     if num_fixed_col == len(df.columns):
@@ -36,7 +36,7 @@ def initialise_gam(df, gam_params={"lambda": 0.1}, te_params={"n_splines": 10}, 
     gam.set_params(**gam_params)
     return gam
 
-def train_gam(dataset_by_station, gam_params={"lambda": 0.1}, te_params={"n_splines": 10},
+def train_gam(dataset_by_station, gam_params={"lam": 0.1}, te_params={"n_splines": 10},
               num_fixed_col=12, return_fitted=False, return_test=True):
     trained_gam = {}
     for station, dataset in dataset_by_station.items():

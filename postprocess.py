@@ -53,9 +53,9 @@ def generate_prediction(trained_gam, combined_load_by_station, method="averaged_
         test_result = result["test_result"]
         trained_gam[station][save_key] = globals()[method](combined_load_by_station[station]["Combined Load"].value, test_result, ws=ws)
     
-def generate_submission(trained_gam, PHASE, data_folder, output_path, apply_abs=True):
-    stations = STATIONS[(PHASE-1)*3:PHASE*3]
-    template = pd.read_csv(os.path.join(data_folder, "phase-%s" % PHASE, "template_%s.csv" % PHASE))
+def generate_submission(trained_gam, phase, data_folder, output_path, apply_abs=True):
+    stations = STATIONS[(phase-1)*3:phase*3]
+    template = pd.read_csv(os.path.join(data_folder, "phase-%s" % phase, "template_%s.csv" % phase))
     template.iloc[:56, -1] = trained_gam[stations[0]]["prediction"]
     template.iloc[56:-56, -1] = trained_gam[stations[1]]["prediction"]
     template.iloc[-56:, -1] = trained_gam[stations[2]]["prediction"]
@@ -63,7 +63,7 @@ def generate_submission(trained_gam, PHASE, data_folder, output_path, apply_abs=
         template.value[template.value < 0] = 0
     if not os.path.isdir(output_path):
         os.makedirs(output_path)
-    output_file = "phase-%s_%s.csv" % (PHASE, datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    output_file = "phase-%s_%s.csv" % (phase, datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
     print("Submission csv dumped to:", os.path.join(output_path, output_file))
     template.to_csv(os.path.join(output_path, output_file))
     return template
@@ -79,8 +79,8 @@ overall         MAPE mean   MAPE mean   ...     MAPE mean
 
 Best method and parameter can be retrieved by the errors over phase-1 stations.
 """
-def show_errors(trained_gam, combined_load_by_station, PHASE, data_folder, apply_abs=True):
-    stations = STATIONS[(PHASE-1)*3:PHASE*3]
+def show_errors(trained_gam, combined_load_by_station, phase, data_folder, apply_abs=True):
+    stations = STATIONS[(phase-1)*3:phase*3]
     smoothing_candidate = [
         ("daily_max", None), ("hourly_mean", None), ("hourly_max", None), 
         ("averaged_smoothed_max", 9), ("averaged_smoothed_max", 13), ("averaged_smoothed_max", 17), 
@@ -90,7 +90,7 @@ def show_errors(trained_gam, combined_load_by_station, PHASE, data_folder, apply
     for (method, ws) in smoothing_candidate:
         keys.append(method if ws is None else "%s-%s" % (method, ws))
         generate_prediction(trained_gam, combined_load_by_station, method=method, ws=ws, save_key=keys[-1])
-    solution = pd.read_csv(os.path.join(data_folder, "phase-%s" % PHASE, "solution_phase%s.csv" % PHASE))
+    solution = pd.read_csv(os.path.join(data_folder, "phase-%s" % phase, "solution_phase%s.csv" % phase))
     solution = [solution[:56], solution[56:-56], solution[-56:]]
     for s in solution:
         s.index = pd.to_datetime(s.date, format="%d/%m/%Y")
@@ -102,6 +102,6 @@ def show_errors(trained_gam, combined_load_by_station, PHASE, data_folder, apply
     errors = np.array(errors)
     errors = np.concatenate((errors, np.mean(errors, axis=0).reshape(1, -1)), axis=0)
     errors = pd.DataFrame(data=errors, columns=keys, index=stations+["overall"])
-    print("="*20, "\nError Matrix of Phase\n")
+    print("="*20, "\nError Matrix of Phase %s\n" % phase)
     print(errors, "\n", "="*20)
     return errors

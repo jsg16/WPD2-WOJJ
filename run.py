@@ -44,6 +44,9 @@ SUBMISSION_FLAG = True
 # A folder for the output submission file if SUBMISSION_FLAG is True
 SUBMISSION_PATH = os.path.join("..", "submissions")
 
+# Show errors on phase-1
+SHOW_ERROR = True
+
 # Smooth the input load. (True is recommended)
 SMOOTH_INPUT = True
 # Remove negative values in the prediction of EV chargers. (True is recommended)
@@ -60,15 +63,19 @@ COMB_SMOOTH_METHOD = "averaged_smoothed_max"
 WS = 7
 
 # GAM Parameters
+# Number of splines to use for each marginal term. Must be of same length as feature.
 # use N_SPLINES=4 to test functionality
 # use N_SPLINES=10 to obtain the best result
-N_SPLINES = 4
-# coefficient of regularizer of GAM
+N_SPLINES = 10
+# Strength of smoothing penalty. Must be a positive float. Larger values enforce stronger smoothing.
 LAMBDA = 0.1
 
 if __name__ == "__main__":
 
-    print("PHASE %s" % PHASE)
+    if PHASE == 1 or PHASe == 2:
+        print("PHASE %s" % PHASE)
+    else:
+        print("Stations to run: %s" % " ".join(INPUT_STATIONS))
     
     # Step 1: Load original data
     data_by_station, combined_load_by_station, national_demand = load_data(DATA_FOLDER)
@@ -96,16 +103,16 @@ if __name__ == "__main__":
     dataset_by_station = pack_dataset(data_by_station, national_demand, stations2run, input_smoothed=SMOOTH_INPUT)
 
     # Step 4: Traing GAM
-    trained_gam = train_gam(dataset_by_station, return_fitted=False, return_test=True, gam_params={"lambda": LAMBDA}, te_params={"n_splines": N_SPLINES})
+    trained_gam = train_gam(dataset_by_station, return_fitted=False, return_test=True, gam_params={"lam": LAMBDA}, te_params={"n_splines": N_SPLINES})
 
     # Step 5: Post-process the prediction
     generate_prediction(trained_gam, combined_load_by_station, method=COMB_SMOOTH_METHOD, ws=WS)
 
-    # uncomment the lines below to show errors of phase-1 using different smoothing methods
-    if SUBMISSION_FLAG and PHASE == 1:
-        show_errors(trained_gam, combined_load_by_station, PHASE, DATA_FOLDER, apply_abs=APPLY_ABS)
+    # show errors of phase-1 using different smoothing methods
+    if SHOW_ERROR and PHASE == 1:
+        errors = show_errors(trained_gam, combined_load_by_station, PHASE, DATA_FOLDER, apply_abs=APPLY_ABS)
+        errors.to_csv(os.path.join(SUBMISSION_PATH, "errors.csv"))
 
-
-    # uncomment the lines below to generate submission file
-    if PHASE == 1 or PHASE == 2:
+    # generate submission file
+    if SUBMISSION_FLAG and (PHASE == 1 or PHASE == 2):
         generate_submission(trained_gam, PHASE, DATA_FOLDER, output_path=SUBMISSION_PATH, apply_abs=APPLY_ABS)
