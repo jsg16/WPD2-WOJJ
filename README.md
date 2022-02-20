@@ -28,7 +28,7 @@ This repository contains the codes and visualization tools for Western Power Dis
 
 # GAM
 
-Generalized Additive Model, or GAM in short generalizes the linear models to capture different nonlinearities on each feature.
+Generalized Additive Model (GAM) generalizes the linear models to capture different nonlinearities on each feature.
 
 > GAMs relax the restriction that the relationship must be a simple weighted sum, and instead assume that the outcome can be modeled by a sum of arbitrary functions of each feature ([source](https://christophm.github.io/interpretable-ml-book/extend-lm.html#gam)).
 
