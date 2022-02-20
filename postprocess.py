@@ -44,6 +44,7 @@ def weighted_smoothed_max(c, p, ws):
         ws = 13
     return daily_max(weighted_smoothing(c, ws=ws).value, p)
 
+# generate prediction by given smoothing methods and prediction
 def generate_prediction(trained_gam, combined_load_by_station, method="averaged_smoothed_max", ws=None, save_key="prediction"):
     if method not in globals():
         print("Unknown post-process method `%s`, switching to default: `averaged_smoothed_max, ws=13`" % method)
@@ -67,6 +68,17 @@ def generate_submission(trained_gam, PHASE, data_folder, output_path, apply_abs=
     template.to_csv(os.path.join(output_path, output_file))
     return template
 
+"""
+The output error matrix is a pandas.DataFrame object, with the structure:
+
+                Method-1    Method-2    ...     Method-N  
+station_1       MAPE        MAPE        ...     MAPE
+station_2       MAPE        MAPE        ...     MAPE
+station_3       MAPE        MAPE        ...     MAPE
+overall         MAPE mean   MAPE mean   ...     MAPE mean
+
+Best method and parameter can be retrieved by the errors over phase-1 stations.
+"""
 def show_errors(trained_gam, combined_load_by_station, PHASE, data_folder, apply_abs=True):
     stations = STATIONS[(PHASE-1)*3:PHASE*3]
     smoothing_candidate = [

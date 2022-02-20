@@ -17,6 +17,8 @@ Nearby_te_default = [['prev_2_mo', 'national'],
                      ['doW_x', 'doW_y']]
 
 def initialise_gam(df, gam_params={"lambda": 0.1}, te_params={"n_splines": 10}, num_fixed_col=12):
+    # num_fixed_col depends on the feature
+    # columns after num_fixed_col is the load of corresponding nearby stations
     col_index = {col: i for i, col in enumerate(df.columns)}
     tensor_terms = te(*[col_index[f] for f in Fixed_te_default[0]], **te_params)
     for features_comb in Fixed_te_default[1:]:
@@ -40,7 +42,7 @@ def train_gam(dataset_by_station, gam_params={"lambda": 0.1}, te_params={"n_spli
     for station, dataset in dataset_by_station.items():
         train_df, test_df = dataset["train"], dataset["test"]
         train_df, train_label = train_df[test_df.columns], train_df["target"]
-        gam = initialise_gam(train_df, gam_params=gam_params, te_params=te_params, num_fixed_col=num_fixed_col-1)
+        gam = initialise_gam(train_df, gam_params=gam_params, te_params=te_params, num_fixed_col=num_fixed_col-1) # -1 due to the target column
         gam.fit(train_df, train_label)
         fitted = run_test(gam, train_df)
         train_mape = mean_absolute_percentage_error(train_label, fitted)

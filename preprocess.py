@@ -10,7 +10,10 @@ import numpy as np
 import pandas as pd
 from statsmodels.tsa.holtwinters import SimpleExpSmoothing
 
+# alpha for exponential smoothing
 ALPHAS = {"temperature": 5e-2, "solar_irradiance": 5e-1, "windspeed_north": 5e-1, "windspeed_east": 5e-1}
+
+# Only apply outlier removal to the following stations (based on experiments)
 OUTLIER_REMOVAL = {"BOURNVILLE CB 7", "BRIDPORT CB 306", "PORTISHEAD ASHLANDS CB 4"}
 
 NEARBY_STATIONS = {
@@ -57,6 +60,7 @@ def load_smoothing(data_by_station, ws=7):
     for station, data in data_by_station.items():
         data["Training Data"] =  avgeraged_smoothing(data["Training Data"], ws=ws).value
 
+# Concatenate all the features here to create the dataset
 def pack_dataset(data_by_station, national_demand, stations, input_smoothed=False):
     dataset_by_station = {station: {"train": None, "test": None} for station in stations}
     for station in stations:

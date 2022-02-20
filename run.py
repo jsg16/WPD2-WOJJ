@@ -31,11 +31,40 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Configurations
+# Please refer to `data_loader.py` to ensure the structure inside the data folder.
 DATA_FOLDER = os.path.join("..", "data")
-SUBMISSION_PATH = os.path.join("..", "submissions")
-SMOOTH_INPUT = True
+
+# Specified the PHASE. Different phases contain different stations
 PHASE = 1
-INPUT_STATIONS = ["BRADLEY STOKE CB 8", "HEMYOCK CB 56_24"] # specific stations work only if PHASE != 1, 2 or other customised phases
+# If PHASE is not set to 1 and 2, then you can specify the stations you want to run.
+INPUT_STATIONS = ["BRADLEY STOKE CB 8", "HEMYOCK CB 56_24"] # examples
+
+# Generate submission only works when PHASE is 1 or 2.
+SUBMISSION_FLAG = True
+# A folder for the output submission file if SUBMISSION_FLAG is True
+SUBMISSION_PATH = os.path.join("..", "submissions")
+
+# Smooth the input load. (True is recommended)
+SMOOTH_INPUT = True
+# Remove negative values in the prediction of EV chargers. (True is recommended)
+APPLY_ABS = True
+# Method for combined load smoothing
+# Valid methods: 
+#   - daily_max
+#   - hourly_mean
+#   - hourly_max
+#   - averaged_smoothed_max
+#   - weighted_smoothed_max
+COMB_SMOOTH_METHOD = "averaged_smoothed_max"
+# Window size for combined load smoothing
+WS = 7
+
+# GAM Parameters
+# use N_SPLINES=4 to test functionality
+# use N_SPLINES=10 to obtain the best result
+N_SPLINES = 4
+# coefficient of regularizer of GAM
+LAMBDA = 0.1
 
 if __name__ == "__main__":
 
@@ -67,18 +96,16 @@ if __name__ == "__main__":
     dataset_by_station = pack_dataset(data_by_station, national_demand, stations2run, input_smoothed=SMOOTH_INPUT)
 
     # Step 4: Traing GAM
-    # use n_splines=4 to test functionality
-    # use n_splines=10 to obtain the best result
-    trained_gam = train_gam(dataset_by_station, return_fitted=False, return_test=True, te_params={"n_splines": 4})
+    trained_gam = train_gam(dataset_by_station, return_fitted=False, return_test=True, gam_params={"lambda": LAMBDA}, te_params={"n_splines": N_SPLINES})
 
     # Step 5: Post-process the prediction
-    generate_prediction(trained_gam, combined_load_by_station)
+    generate_prediction(trained_gam, combined_load_by_station, method=COMB_SMOOTH_METHOD, ws=WS)
 
     # uncomment the lines below to show errors of phase-1 using different smoothing methods
-    if PHASE == 1:
-        show_errors(trained_gam, combined_load_by_station, PHASE, DATA_FOLDER, apply_abs=True)
+    if SUBMISSION_FLAG and PHASE == 1:
+        show_errors(trained_gam, combined_load_by_station, PHASE, DATA_FOLDER, apply_abs=APPLY_ABS)
 
 
     # uncomment the lines below to generate submission file
     if PHASE == 1 or PHASE == 2:
-        generate_submission(trained_gam, PHASE, DATA_FOLDER, output_path=SUBMISSION_PATH, apply_abs=True)
+        generate_submission(trained_gam, PHASE, DATA_FOLDER, output_path=SUBMISSION_PATH, apply_abs=APPLY_ABS)
