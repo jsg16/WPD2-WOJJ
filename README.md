@@ -119,7 +119,10 @@ Criterion: Mean Absolute Percentage Error (MAPE)
 |------|-----------------|------------------|--------------------------|
 | Training MAPE | 0.04185         | 0.06348          | 0.07580                  |
 
-![Predictions of Phase 2](./figures/Phase2_Prediction.png)
+![](./figures/Bridport_Prediction.png)
+
+![](./figures/Hemyock_Prediction.png)
+
+![](./figures/Stratton_Prediction.png)
 
 *\*Using the averaged smoothing method with window size equal to 13 for post-processing.*
-
