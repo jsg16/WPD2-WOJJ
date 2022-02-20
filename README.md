@@ -42,7 +42,7 @@ f_i(x_i)=\sum_{k=1}^{K_i}\beta_{ij}f_{ij}(x_i)
 $$
 $f_{ij}$ is the $k$-th basis function on feature $i$ and $K_i$ is the number of basis functions on feature $i$. Note that different features may have different types of basis functions.
 
-## Pre-requisites 
+# Prerequisite
 
 To run the model on windows OS, we suggest to use Anaconda.
 
@@ -52,7 +52,7 @@ To run the model on windows OS, we suggest to use Anaconda.
 4. Add the conda forge channel by `conda config --append channels conda-forge`;
 5. Install the extra requirements `conda install --file requirements.txt`.
 
-## Execution
+# Execution
 
 To execute the codes, simply run the entry script `run.py`. 
  
@@ -82,17 +82,40 @@ We incorporate the following parameters for GAM:
 
 * `N_SPLINES`: Number of splines to use for each marginal term. Must be of same length as feature.
 
-* `LAMBDA`: Strength of smoothing penalty. Must be a positive float. Larger values enforce stronger smoothing.
+* `LAMBDA`: Strength of smoothing penalty. Must be a positive float. Larger values enforce stronger smoothing.     |
 
-## Error Matrix of stations of phase 1
+# Error Matrix of stations of phase 1
 
 With `SHOW_ERROR` set to True, various smoothing methods with different window size will be evaluated, which can guide the parameter selection in phase 2. Our best results (error matrix) over stations of phase 1 are summarized as followed, which is a `pandas.DataFrame` object.
 
-|                    | daily_max | hourly_mean | hourly_max | avg-9 | **avg-13** | avg-17 | wgt-9 | wgt-13 | wgt-17 |
+Criterion: Mean Absolute Percentage Error (MAPE)
+
+|                    | daily_max | hourly_mean | hourly_max | avg-9 | avg-13 | avg-17 | wgt-9 | wgt-13 | wgt-17 |
 |--------------------|-----------|-------------|------------|-------------------------|--------------------------|--------------------------|-------------------------|--------------------------|--------------------------|
 | BOURNVILLE CB 7    | 0.04363   | 0.04433     | 0.06339    | 0.04053                 | **0.03930**                  | 0.04052                  | 0.04081                 | 0.03996                  | 0.03945                  |
 | BRADLEY STOKE CB 8 | 0.01887   | 0.01939     | 0.02598    | 0.01884                 | 0.01808                  | **0.01570**                  | 0.01853                 | 0.01878                  | 0.01793                  |
 | STRATTON CB 4041   | 0.02663   | 0.03460     | 0.07314    | 0.02566                 | **0.02220**                  | 0.02744                  | 0.02465                 | 0.02517                  | 0.02341                  |
-| Overall (mean)     | 0.02971   | 0.03277     | 0.05417    | 0.02834                 | **0.02653**                  | 0.02788                  | 0.02800                 | 0.02797                  | 0.02693                  |
+| Overall (mean)            | 0.02971   | 0.03277     | 0.05417    | 0.02834                 | **0.02653**                  | 0.02788                  | 0.02800                 | 0.02797                  | 0.02693                  |
 
-*The avg and wgt stands for averaged and weighted smoothing respectively, while the followed number stands for the window size.*
+*\*The avg and wgt stand for averaged and weighted smoothing respectively, while the number followed stands for the window size.*
+
+# Phase 1 Prediction
+
+|      | BOURNVILLE CB 7 | BRADLEY STOKE CB 8 | STRATTON CB 4041 |
+|------|-----------------|--------------------|------------------|
+| Training MAPE | 0.05173         | 0.02452            | 0.07264     
+
+![Predictions of Phase 1](./figures/Phase1_Prediction.png)
+
+*\*Using the averaged smoothing method with window size equal to 13 for post-processing.*
+
+# Phase 2 Prediction
+
+|      | BRIDPORT CB 306 | HEMYOCK CB 56_24 | PORTISHEAD ASHLANDS CB 4 |
+|------|-----------------|------------------|--------------------------|
+| Training MAPE | 0.04185         | 0.06348          | 0.07580                  |
+
+![Predictions of Phase 2](./figures/Phase2_Prediction.png)
+
+*\*Using the averaged smoothing method with window size equal to 13 for post-processing.*
+

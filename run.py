@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore")
 DATA_FOLDER = os.path.join("..", "data")
 
 # Specified the PHASE. Different phases contain different stations
-PHASE = 1
+PHASE = 1 # or 2
 # If PHASE is not set to 1 and 2, then you can specify the stations you want to run.
 INPUT_STATIONS = ["BRADLEY STOKE CB 8", "HEMYOCK CB 56_24"] # examples
 
@@ -60,7 +60,7 @@ APPLY_ABS = True
 #   - weighted_smoothed_max
 COMB_SMOOTH_METHOD = "averaged_smoothed_max"
 # Window size for combined load smoothing
-WS = 7
+WS = 13
 
 # GAM Parameters
 # Number of splines to use for each marginal term. Must be of same length as feature.
@@ -72,7 +72,7 @@ LAMBDA = 0.1
 
 if __name__ == "__main__":
 
-    if PHASE == 1 or PHASe == 2:
+    if PHASE == 1 or PHASE == 2:
         print("PHASE %s" % PHASE)
     else:
         print("Stations to run: %s" % " ".join(INPUT_STATIONS))
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     # show errors of phase-1 using different smoothing methods
     if SHOW_ERROR and PHASE == 1:
         errors = show_errors(trained_gam, combined_load_by_station, PHASE, DATA_FOLDER, apply_abs=APPLY_ABS)
-        errors.to_csv(os.path.join(SUBMISSION_PATH, "errors.csv"))
+        # errors.to_csv(os.path.join(SUBMISSION_PATH, "errors.csv"))
 
     # generate submission file
     if SUBMISSION_FLAG and (PHASE == 1 or PHASE == 2):

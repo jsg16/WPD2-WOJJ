@@ -16,18 +16,28 @@ Nearby_te_default = [['prev_2_mo', 'national'],
                      ['month', 'hour'], 
                      ['doW_x', 'doW_y']]
 
-def initialise_gam(df, gam_params={"lambda": 0.1}, te_params={"n_splines": 10}, num_fixed_col=12):
+def initialise_gam(df, gam_params={"lam": 0.1}, te_params={"n_splines": 10}, num_fixed_col=12):
     # num_fixed_col depends on the feature
     # columns after num_fixed_col is the load of corresponding nearby stations
     col_index = {col: i for i, col in enumerate(df.columns)}
     tensor_terms = te(*[col_index[f] for f in Fixed_te_default[0]], **te_params)
-    for features_comb in Fixed_te_default[1:]:
+    for features_comb in Fixed_te_default[1:-1]:
         tensor_terms += te(*[col_index[f] for f in features_comb], **te_params)
     # col starts from num_fixed_col stands for nearby stations
     for col in df.columns[num_fixed_col:]:
-        te_flex = [[col] + features_comb for features_comb in Nearby_te_default]
+        te_flex = [[col] + features_comb for features_comb in Nearby_te_default[:-1]]
         for features_comb in te_flex:
             tensor_terms += te(*[col_index[f] for f in features_comb], **te_params)
+
+    # If tensorterm is not in this order, the svd may fail to converge (don't know why)
+    for features_comb in Fixed_te_default[-1:]:
+        tensor_terms += te(*[col_index[f] for f in features_comb], **te_params)
+    # col starts from num_fixed_col stands for nearby stations
+    for col in df.columns[num_fixed_col:]:
+        te_flex = [[col] + features_comb for features_comb in Nearby_te_default[-1:]]
+        for features_comb in te_flex:
+            tensor_terms += te(*[col_index[f] for f in features_comb], **te_params)
+
     if num_fixed_col == len(df.columns):
         te_flex = [['prev_2_mo', 'national'], ['national', 'doW_x', 'doW_y']]
         for features_comb in te_flex:
