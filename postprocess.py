@@ -25,6 +25,10 @@ def daily_max(c, p, ws=None):
 def hourly_mean(c, p, ws=None):
     if ws is not None:
         print("window size not needed")
+    # CODE REVIEW (DESIGN CHOICE): What are the consequences of using 60T rather than 1H? I think this means that
+    # hour ranges will be aligned with whatever the first minute value present is (e.g. 06:13, 07:13). If that
+    # is the case, does the 'D' resampling therefore potentially incorrectly include some minutes from just after 
+    # midnight in the current day?
     return (c.resample('60T').mean()-p).resample('D').max()
 
 def hourly_max(c, p, ws=None):
@@ -54,6 +58,9 @@ def generate_prediction(trained_gam, combined_load_by_station, method="averaged_
         trained_gam[station][save_key] = globals()[method](combined_load_by_station[station]["Combined Load"].value, test_result, ws=ws)
     
 def generate_submission(trained_gam, phase, data_folder, output_path, apply_abs=True):
+    # CODE REVIEW (STYLE/MAINTAINABILITY): The code here [and in show_errors()] only works if there are exactly 3 substations for each
+    # phase (and 56 days to predict). This is fine (and obviously the case for this challenge) but is an obvious place to generalise if 
+    # you intend this code to be reused for other problems
     stations = STATIONS[(phase-1)*3:phase*3]
     template = pd.read_csv(os.path.join(data_folder, "phase-%s" % phase, "template_%s.csv" % phase))
     template.iloc[:56, -1] = trained_gam[stations[0]]["prediction"]

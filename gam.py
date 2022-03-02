@@ -8,6 +8,7 @@ import pandas as pd
 from pygam import GAM, te
 from sklearn.metrics import mean_absolute_percentage_error
 
+# CODE REVIEW (STYLE): These variables have inconsistent case (initial capitalisation) compared to others elsewhere in the project
 Fixed_te_default = [['prev_2_mo', 'month', 'hour'],
                     ['month', 'hour', 'day'],
                     ['month', 'windspeed_north', 'windspeed_east']]
