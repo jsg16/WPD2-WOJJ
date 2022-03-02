@@ -22,9 +22,10 @@ NEARBY_STATIONS = {
     "STRATTON CB 4041": [],
     "BRIDPORT CB 306": ["HEMYOCK CB 56_24"], 
     "HEMYOCK CB 56_24": ["BRIDPORT CB 306"], 
-    "PORTISHEAD ASHLANDS CB 4": ["BOURNVILLE CB 7", "BRADLEY STOKE CB 8"]
+    "PORTISHEAD ASHLANDS CB 4": ["BOURNVILLE CB 7", "BRADLEY STOKE CB 8"] # CODE REVIEW (DESIGN CHOICE): Why are Bournville and Bradley Stoke nearby to Portishead, but not vice-versa?
 }
 
+# CODE REVIEW (TYPO): Function name is mispelled
 def avgeraged_smoothing(c, ws=7):
     weights = np.ones(ws) / ws
     conved = pd.DataFrame(data={"value":np.convolve(c.to_numpy(), weights, mode='same')}, index=c.index)
@@ -70,6 +71,8 @@ def pack_dataset(data_by_station, national_demand, stations, input_smoothed=Fals
         data = data_by_station[station]
         v = data["Training Data"]
         # train & test
+        # CODE REVIEW (STYLE): Repeated use of magic number (5376) that should be predefined (and explained). The same is probably 
+        # true for the dates in the date range
         dfs = [pd.DataFrame(np.transpose([v.values[:-5376], v.values[5376:]]), index=v.index[5376:], columns=['prev_2_mo', 'target']),
                pd.DataFrame(np.transpose([v.values[-5376:]]), index=pd.date_range('2021-10-04', '2021-11-29', freq='15T', closed='left'), columns = ['prev_2_mo'])]
         for i, df in enumerate(dfs):
@@ -77,6 +80,7 @@ def pack_dataset(data_by_station, national_demand, stations, input_smoothed=Fals
             df['national'] = national_demand
             # calendar features
             df['month'] = df.index.month
+            # CODE REVIEW (DESIGN CHOICE): Why use temporal encoding for weekday but not hour?            
             df['hour'] = df.index.hour
             df['day'] =  df.index.dayofyear
             # temporal encoding of day of week

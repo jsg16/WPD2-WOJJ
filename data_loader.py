@@ -70,6 +70,9 @@ def load_station_training_data(load_folder, data_by_station):
         if "Training Data" not in data or type(data["Training Data"]) is not str:
             continue
         # Training Data
+        # CODE REVIEW (STYLE/EFFICIENCY): The index could be set (and read as a datetime within read_csv):
+        # training = pd.read_csv(["Training Data"], parse_dates=["time"], index_col=["time"])
+        # This applies below as well
         training = pd.read_csv(data["Training Data"])
         training.drop('Unnamed: 0', axis=1, inplace=True)
         # re-index
@@ -102,6 +105,7 @@ def load_station_combined_load(load_folder, data_by_station):
 def load_weather(weather_folder, data_by_station):
     for station, data in data_by_station.items():
         weather_station = data["Weather Data"]
+        # CODE REVIEW (STYLE): f-strings can make this more readable. e.g. f"df_weather{weather_station}_hourly.csv"
         weather = pd.read_csv(os.path.join(weather_folder, "df_weather_%s_hourly.csv" % weather_station))
         # re-index
         weather.index = pd.to_datetime(weather.datetime)
